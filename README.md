@@ -1,0 +1,139 @@
+# AWS Platform Starter Kit
+
+Practical AWS infrastructure starter kit for small teams
+
+It generates a reviewable Terraform baseline with consistent naming, tagging, network layout, and conservative security defaults
+
+No blind apply. The bootstrap script writes config, prints the naming preview, calls out cost-sensitive choices, and stops at `terraform plan`
+
+## What It Can Create
+
+- VPC with public, private, and isolated subnet options
+- dedicated security groups instead of default security group usage
+- optional SSM-only EC2 admin host
+- optional ECS/Fargate cluster
+- optional Route 53 hosted zone
+- optional CloudTrail baseline
+- optional CloudWatch budget alert
+- consistent tags and naming
+- CI workflow for Terraform formatting and validation
+
+## Quick Start
+
+```bash
+./scripts/bootstrap.sh
+cd environments/dev
+terraform init
+terraform plan
+```
+
+The script creates an environment-specific `terraform.tfvars` file
+
+If the selected environment directory does not exist yet, the script copies the Terraform root files from `environments/dev/` and writes a new `terraform.tfvars`
+
+Input rules: [docs/input-parameters.md](docs/input-parameters.md)
+
+Generated output example: [docs/generated-tfvars-example.md](docs/generated-tfvars-example.md)
+
+## Network Layout
+
+Default VPC CIDR:
+
+```text
+10.20.0.0/16
+```
+
+Default two-AZ subnet split:
+
+| Tier | AZ A | AZ B |
+| --- | --- | --- |
+| public | `10.20.0.0/20` | `10.20.16.0/20` |
+| private | `10.20.64.0/20` | `10.20.80.0/20` |
+| isolated | `10.20.128.0/20` | `10.20.144.0/20` |
+
+Private subnets only get internet egress when NAT Gateway is enabled
+
+More detail: [docs/architecture.md](docs/architecture.md)
+
+## State Backend
+
+Local state is the default for the first run
+
+For shared or long-lived infrastructure, use remote state. The recommended AWS path is S3 with native lockfile support on Terraform 1.10 or newer
+
+Backend options: [docs/state-backend.md](docs/state-backend.md)
+
+## Example Naming
+
+For company `Acme`, environment `dev`, and prefix `acme`, resources follow names like:
+
+```text
+VPC: acme-dev-vpc-01
+Public subnet A: acme-dev-public-a
+Private subnet A: acme-dev-private-a
+ECS cluster: acme-dev-ecs
+EC2 admin host: acme-dev-admin-01
+```
+
+## Design Principles
+
+- Generate config first, then review a plan
+- Use descriptive names
+- Tag everything consistently
+- Prefer private subnets for workloads
+- Prefer SSM Session Manager over public SSH
+- Create dedicated security groups per workload
+- Keep optional components explicit
+- Make cleanup documented and predictable
+
+## Cost Warning
+
+Some resources can create recurring costs, especially:
+
+- NAT Gateway
+- EC2 instances
+- Route 53 hosted zones
+- CloudWatch metrics/logs
+- AWS Budgets is usually low-cost/free depending on account usage, but check AWS pricing
+
+Always run `terraform plan` before applying and review what will be created
+
+## Repository Layout
+
+```text
+environments/
+  dev/
+modules/
+  vpc/
+  ec2/
+  ecs/
+  monitoring/
+  route53/
+  security-baseline/
+scripts/
+docs/
+```
+
+## Production Notes
+
+This is a starter kit, not a full production landing zone
+
+For production, consider:
+
+- separate AWS accounts per environment
+- remote state with encryption and locking
+- CI plan/apply workflow with approval gates
+- centralized logs
+- IAM Identity Center for human access
+- stricter SCPs and AWS Organizations structure
+- tested backup and restore procedures
+- explicit incident runbooks
+
+Related notes:
+
+- [docs/security-notes.md](docs/security-notes.md)
+- [docs/architecture.md](docs/architecture.md)
+
+## License
+
+MIT
