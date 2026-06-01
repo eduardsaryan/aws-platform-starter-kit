@@ -20,6 +20,13 @@ No blind apply. The bootstrap script writes config, prints the naming preview, c
 
 ## Quick Start
 
+Prerequisites:
+
+- Terraform 1.10 or newer
+- AWS credentials configured locally
+- IAM permissions for the selected resources
+- test AWS account or sandbox environment
+
 ```bash
 ./scripts/bootstrap.sh
 cd environments/dev
