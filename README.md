@@ -23,7 +23,7 @@ No blind apply. The bootstrap script writes config, prints the naming preview, c
 Prerequisites:
 
 - Terraform 1.10 or newer
-- AWS credentials configured locally
+- AWS credentials configured locally, through AWS SSO, environment variables, or `aws configure`
 - IAM permissions for the selected resources
 - test AWS account or sandbox environment
 
@@ -41,6 +41,55 @@ If the selected environment directory does not exist yet, the script copies the 
 Input rules: [docs/input-parameters.md](docs/input-parameters.md)
 
 Generated output example: [docs/generated-tfvars-example.md](docs/generated-tfvars-example.md)
+
+## Test Locally
+
+Use a test AWS account or sandbox environment
+
+Check AWS identity first:
+
+```bash
+aws sts get-caller-identity
+```
+
+Generate config:
+
+```bash
+./scripts/bootstrap.sh
+```
+
+For the first test, keep the default low-cost choices:
+
+- NAT Gateway disabled
+- EC2 admin host disabled
+- Route 53 hosted zone disabled
+- budget alert disabled unless you have a real alert email
+
+Run Terraform checks:
+
+```bash
+cd environments/dev
+terraform init -backend=false
+terraform fmt -recursive
+terraform validate
+terraform plan
+```
+
+Expected result:
+
+- `terraform validate` reports success
+- `terraform plan` completes without provider or syntax errors
+- the plan shows only the components selected during bootstrap
+- no infrastructure is created yet
+
+Do not run `terraform apply` during the first test
+
+If `terraform plan` fails before showing a plan, check:
+
+- AWS credentials are active
+- selected AWS region is correct
+- IAM permissions allow the selected resources
+- `terraform.tfvars` exists in the environment directory
 
 ## Network Layout
 
