@@ -31,7 +31,7 @@ budget_alert_email = ""
 This default shape creates the low-cost baseline pieces first:
 
 - VPC and subnet layout
-- S3 gateway endpoint
+- S3 gateway endpoint and SSM interface endpoints
 - ECS cluster
 - CloudTrail bucket and trail
 
@@ -42,4 +42,10 @@ It skips resources that commonly create surprise cost or operational side effect
 - EC2 admin host
 - Budget alert without a real subscriber
 
-Run `terraform plan` from the generated environment directory before applying
+Run `tofu plan` from the generated environment directory before applying
+
+Terraform-compatible path:
+
+```bash
+terraform plan
+```

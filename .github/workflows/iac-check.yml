@@ -1,0 +1,62 @@
+name: IaC Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  opentofu:
+    name: OpenTofu fmt and validate
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: environments/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.10.0
+          tofu_wrapper: false
+
+      - name: OpenTofu fmt
+        run: tofu fmt -check -recursive ../..
+
+      - name: OpenTofu init
+        run: tofu init -backend=false
+
+      - name: OpenTofu validate
+        run: tofu validate
+
+  terraform:
+    name: Terraform compatibility
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: environments/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive ../..
+
+      - name: Terraform init
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform validate

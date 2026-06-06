@@ -109,7 +109,7 @@ slugify() {
 
 echo "AWS Platform Starter Kit"
 echo
-echo "This script generates Terraform variables. It does not apply infrastructure."
+echo "This script generates OpenTofu/Terraform variables. It does not apply infrastructure."
 echo
 
 company_name="$(prompt_required "Company or project name")"
@@ -123,7 +123,7 @@ echo
 echo "Select components"
 enable_vpc="$(yes_no "Create VPC and subnets?" "y")"
 enable_nat_gateway="$(yes_no "Create NAT Gateway? This can create notable cost." "n")"
-enable_vpc_endpoints="$(yes_no "Create common VPC endpoints?" "y")"
+enable_vpc_endpoints="$(yes_no "Create S3 and SSM VPC endpoints?" "y")"
 enable_ec2_admin_host="$(yes_no "Create SSM-only EC2 admin host?" "n")"
 enable_ecs_cluster="$(yes_no "Create ECS/Fargate cluster?" "y")"
 enable_route53_zone="$(yes_no "Create Route 53 hosted zone for the domain?" "n")"
@@ -207,9 +207,13 @@ echo "Review notes"
 echo "- Dedicated security groups are created per workload, avoid using the default security group"
 echo "- SSM Session Manager is preferred over public SSH for admin access"
 echo "- NAT Gateway and Route 53 hosted zones can create recurring cost"
-echo "- Review the Terraform plan before applying"
+echo "- Review the plan before applying"
 echo
 echo "Next commands"
 echo "cd $env_dir"
+echo "tofu init"
+echo "tofu plan"
+echo
+echo "Terraform-compatible path"
 echo "terraform init"
 echo "terraform plan"

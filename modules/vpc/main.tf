@@ -3,6 +3,7 @@ locals {
   private_subnet_cidrs  = [for index, _ in var.availability_zones : cidrsubnet(var.cidr_block, 4, index + 4)]
   isolated_subnet_cidrs = [for index, _ in var.availability_zones : cidrsubnet(var.cidr_block, 4, index + 8)]
   az_suffixes           = [for az in var.availability_zones : substr(az, length(az) - 1, 1)]
+  ssm_endpoint_services = ["ssm", "ssmmessages", "ec2messages"]
 }
 
 data "aws_region" "current" {}
@@ -161,5 +162,48 @@ resource "aws_vpc_endpoint" "s3" {
 
   tags = {
     Name = "${var.name_prefix}-s3-endpoint"
+  }
+}
+
+resource "aws_security_group" "vpc_endpoints" {
+  count = var.enable_vpc_endpoints ? 1 : 0
+
+  name        = "${var.name_prefix}-vpc-endpoints-sg"
+  description = "HTTPS access to private VPC endpoints"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTPS from inside the VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block]
+  }
+
+  egress {
+    description = "HTTPS responses"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block]
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-vpc-endpoints-sg"
+  }
+}
+
+resource "aws_vpc_endpoint" "ssm" {
+  for_each = var.enable_vpc_endpoints ? toset(local.ssm_endpoint_services) : toset([])
+
+  vpc_id              = aws_vpc.this.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.${each.key}"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints[0].id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "${var.name_prefix}-${each.key}-endpoint"
   }
 }

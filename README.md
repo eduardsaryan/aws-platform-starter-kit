@@ -2,49 +2,65 @@
 
 Practical AWS infrastructure starter kit for small teams
 
-It generates a reviewable Terraform baseline with consistent naming, tagging, network layout, and conservative security defaults
+It generates a reviewable AWS infrastructure baseline with consistent naming, tagging, network layout, and conservative security defaults
 
-No blind apply. The bootstrap script writes config, prints the naming preview, calls out cost-sensitive choices, and stops at `terraform plan`
+OpenTofu is the default path. Terraform-compatible commands are included because many teams still standardize on Terraform
+
+No blind apply. The bootstrap script writes config, prints the naming preview, calls out cost-sensitive choices, and stops at a reviewable plan
 
 ## What It Can Create
 
 - VPC with public, private, and isolated subnet options
 - dedicated security groups instead of default security group usage
+- S3 and SSM VPC endpoints
 - optional SSM-only EC2 admin host
 - optional ECS/Fargate cluster
 - optional Route 53 hosted zone
-- optional CloudTrail baseline
+- optional CloudTrail trail
 - optional CloudWatch budget alert
 - consistent tags and naming
-- CI workflow for Terraform formatting and validation
+- CI checks for OpenTofu validation and Terraform compatibility
 
 ## Quick Start
 
 Prerequisites:
 
-- Terraform 1.10 or newer
-- AWS credentials configured locally, through AWS SSO, environment variables, or `aws configure`
+- OpenTofu 1.10 or newer
+- Terraform 1.10 or newer if you want to use the compatibility path
+- AWS credentials available to the execution environment, for example AWS SSO, OIDC, or environment variables
 - IAM permissions for the selected resources
-- test AWS account or sandbox environment
+- test AWS account
 
 ```bash
 ./scripts/bootstrap.sh
 cd environments/dev
-terraform init
-terraform plan
+tofu init
+tofu plan
 ```
 
 The script creates an environment-specific `terraform.tfvars` file
 
-If the selected environment directory does not exist yet, the script copies the Terraform root files from `environments/dev/` and writes a new `terraform.tfvars`
+If the selected environment directory does not exist yet, the script copies the root HCL files from `environments/dev/` and writes a new `terraform.tfvars`
 
 Input rules: [docs/input-parameters.md](docs/input-parameters.md)
 
 Generated output example: [docs/generated-tfvars-example.md](docs/generated-tfvars-example.md)
 
-## Test Locally
+## Terraform Compatibility
 
-Use a test AWS account or sandbox environment
+The same HCL can also be checked with Terraform:
+
+```bash
+cd environments/dev
+terraform init
+terraform plan
+```
+
+Do not maintain separate OpenTofu and Terraform folders. Compatibility should be proven by CI and documented command paths, not duplicated code
+
+## Review And Validate
+
+Use a test AWS account
 
 Check AWS identity first:
 
@@ -65,26 +81,26 @@ For the first test, keep the default low-cost choices:
 - Route 53 hosted zone disabled
 - budget alert disabled unless you have a real alert email
 
-Run Terraform checks:
+Run OpenTofu checks:
 
 ```bash
 cd environments/dev
-terraform init -backend=false
-terraform fmt -recursive
-terraform validate
-terraform plan
+tofu init -backend=false
+tofu fmt -recursive ../..
+tofu validate
+tofu plan
 ```
 
 Expected result:
 
-- `terraform validate` reports success
-- `terraform plan` completes without provider or syntax errors
+- `tofu validate` reports success
+- `tofu plan` completes without provider or syntax errors
 - the plan shows only the components selected during bootstrap
 - no infrastructure is created yet
 
-Do not run `terraform apply` during the first test
+Do not run `tofu apply` during the first test
 
-If `terraform plan` fails before showing a plan, check:
+If `tofu plan` fails before showing a plan, check:
 
 - AWS credentials are active
 - selected AWS region is correct
@@ -113,9 +129,9 @@ More detail: [docs/architecture.md](docs/architecture.md)
 
 ## State Backend
 
-Local state is the default for the first run
+No remote backend is enabled by default, so the state path is an explicit choice
 
-For shared or long-lived infrastructure, use remote state. The recommended AWS path is S3 with native lockfile support on Terraform 1.10 or newer
+For shared or long-lived infrastructure, use remote state. The recommended AWS path is S3 with native lockfile support on OpenTofu 1.10 or newer
 
 Backend options: [docs/state-backend.md](docs/state-backend.md)
 
@@ -152,7 +168,7 @@ Some resources can create recurring costs, especially:
 - CloudWatch metrics/logs
 - AWS Budgets is usually low-cost/free depending on account usage, but check AWS pricing
 
-Always run `terraform plan` before applying and review what will be created
+Always run `tofu plan` before applying and review what will be created
 
 ## Repository Layout
 

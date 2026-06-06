@@ -2,7 +2,7 @@
 #
 # terraform {
 #   backend "s3" {
-#     bucket       = "my-terraform-state-bucket"
+#     bucket       = "my-iac-state-bucket"
 #     key          = "aws-platform-starter-kit/dev/terraform.tfstate"
 #     region       = "us-east-1"
 #     encrypt      = true

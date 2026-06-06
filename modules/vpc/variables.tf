@@ -29,6 +29,6 @@ variable "enable_nat_gateway" {
 }
 
 variable "enable_vpc_endpoints" {
-  description = "Create common VPC endpoints."
+  description = "Create S3 and SSM VPC endpoints."
   type        = bool
 }

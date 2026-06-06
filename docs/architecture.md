@@ -14,7 +14,7 @@ staging account
 prod account
 ```
 
-For this public starter, the Terraform environment starts with local state so readers can understand the structure before adding remote state or CI/CD.
+For this public starter, no remote backend is enabled by default. Choose a state backend before using it for shared or long-lived infrastructure.
 
 ## Network Layout
 
@@ -63,6 +63,7 @@ Route table behavior:
 - private subnets get a default route only when NAT Gateway is enabled
 - isolated subnets have no default route to the internet
 - S3 gateway endpoint is attached to private and isolated route tables when enabled
+- SSM interface endpoints are placed in private subnets when endpoints are enabled
 
 ## Component Selection
 

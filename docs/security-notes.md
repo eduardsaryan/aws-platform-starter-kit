@@ -15,6 +15,8 @@ Prefer SSM Session Manager over public SSH:
 - IAM-controlled permissions
 - easier emergency access without exposing port 22
 
+With VPC endpoints enabled, the private admin host can reach SSM without NAT.
+
 If SSH is required, restrict it to trusted source ranges and document why.
 
 ## CloudTrail
@@ -27,15 +29,15 @@ Do not put secrets in:
 
 - Git
 - `.tfvars`
-- Terraform state without understanding exposure
+- state files without understanding exposure
 - user data scripts
 - CI logs
 
 Use AWS Secrets Manager, SSM Parameter Store, or another secret manager.
 
-## Terraform State
+## State
 
-Local state is acceptable only for learning. For real use, configure:
+For real use, configure remote state:
 
 - S3 backend
 - encryption
@@ -48,7 +50,13 @@ Local state is acceptable only for learning. For real use, configure:
 The bootstrap script intentionally generates config and stops before applying. Review:
 
 ```bash
-terraform plan
+tofu plan
 ```
 
 Then apply only after checking resource names, costs, network exposure, and IAM changes.
+
+Terraform-compatible path:
+
+```bash
+terraform plan
+```

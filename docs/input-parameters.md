@@ -6,7 +6,7 @@ The starter kit separates inputs into three groups:
 - optional with safe defaults
 - conditionally required based on selected components
 
-The bootstrap script generates `terraform.tfvars` and stops before `terraform apply`.
+The bootstrap script generates `terraform.tfvars` and stops before apply.
 
 Example generated output: [generated-tfvars-example.md](generated-tfvars-example.md)
 
@@ -36,7 +36,7 @@ Example generated output: [generated-tfvars-example.md](generated-tfvars-example
 | --- | --- | --- |
 | `enable_vpc` | `true` | Creates VPC and subnets |
 | `enable_nat_gateway` | `false` | Disabled by default because NAT Gateway can be expensive |
-| `enable_vpc_endpoints` | `true` | Keeps AWS service traffic private where supported |
+| `enable_vpc_endpoints` | `true` | Adds S3 and SSM endpoints for the private subnet path |
 | `enable_ec2_admin_host` | `false` | Disabled unless an admin host is needed |
 | `enable_ecs_cluster` | `true` | Creates ECS/Fargate cluster |
 | `enable_route53_zone` | `false` | Disabled to avoid accidental DNS changes/cost |
@@ -61,4 +61,4 @@ Defaults are conservative:
 - no EC2 admin host by default
 - SSM-only admin host pattern if EC2 is enabled
 - CloudTrail enabled by default
-- Terraform plan review before apply
+- OpenTofu plan review before apply, with Terraform-compatible commands available

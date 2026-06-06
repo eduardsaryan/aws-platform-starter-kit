@@ -4,7 +4,7 @@ resource "aws_security_group" "admin" {
   vpc_id      = var.vpc_id
 
   egress {
-    description = "Allow outbound HTTPS for SSM and package access"
+    description = "Allow outbound HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
