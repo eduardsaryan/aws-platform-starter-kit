@@ -21,52 +21,124 @@ No blind apply. The bootstrap script writes config, prints the naming preview, c
 - consistent tags and naming
 - CI checks for OpenTofu validation and Terraform compatibility
 
-## Quick Start
+## Default Settings
 
-Prerequisites:
+| Setting | Default |
+| --- | --- |
+| AWS region | `us-east-1` |
+| environment | `dev` |
+| VPC CIDR | `10.20.0.0/16` |
+| public subnet A | `10.20.0.0/20` in `us-east-1a` |
+| public subnet B | `10.20.16.0/20` in `us-east-1b` |
+| private subnet A | `10.20.64.0/20` in `us-east-1a` |
+| private subnet B | `10.20.80.0/20` in `us-east-1b` |
+| isolated subnet A | `10.20.128.0/20` in `us-east-1a` |
+| isolated subnet B | `10.20.144.0/20` in `us-east-1b` |
+| NAT Gateway | disabled |
+| VPC endpoints | enabled |
+| EC2 admin host | disabled |
+| ECS/Fargate cluster | enabled |
+| Route 53 hosted zone | disabled |
+| CloudTrail trail | enabled |
+| budget alert | disabled |
+
+## Prerequisites
+
+Use a test AWS account. Do not start with a production account
+
+Required local tools:
 
 - OpenTofu 1.10 or newer
-- Terraform 1.10 or newer if you want to use the compatibility path
-- AWS credentials available to the execution environment, for example AWS SSO, OIDC, or environment variables
-- IAM permissions for the selected resources
-- test AWS account
+- AWS CLI
+- Terraform 1.10 or newer only if you want to check compatibility
+
+Required AWS access:
+
+- an AWS account you can create test resources in
+- permission to create the resources you enable during bootstrap
+- one working AWS credential path:
+  - AWS SSO profile
+  - IAM access key in environment variables
+  - IAM access key configured with `aws configure`
+
+## Install Local Tools
+
+Install OpenTofu on macOS with Homebrew:
 
 ```bash
-./scripts/bootstrap.sh
-cd environments/dev
-tofu init
-tofu plan
+brew install opentofu
 ```
 
-The script creates an environment-specific `terraform.tfvars` file
-
-If the selected environment directory does not exist yet, the script copies the root HCL files from `environments/dev/` and writes a new `terraform.tfvars`
-
-Input rules: [docs/input-parameters.md](docs/input-parameters.md)
-
-Generated output example: [docs/generated-tfvars-example.md](docs/generated-tfvars-example.md)
-
-## Terraform Compatibility
-
-The same HCL can also be checked with Terraform:
+Install the AWS CLI on macOS with Homebrew:
 
 ```bash
-cd environments/dev
-terraform init
-terraform plan
+brew install awscli
 ```
 
-Do not maintain separate OpenTofu and Terraform folders. Compatibility should be proven by CI and documented command paths, not duplicated code
-
-## Review And Validate
-
-Use a test AWS account
-
-Check AWS identity first:
+Optional Terraform compatibility path:
 
 ```bash
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+```
+
+Check tools:
+
+```bash
+tofu version
+aws --version
+terraform version
+```
+
+If you are not using Terraform, skip the `terraform version` check
+
+## AWS Credentials
+
+Choose one credential path
+
+### AWS SSO
+
+Configure the profile:
+
+```bash
+aws configure sso
+```
+
+Log in:
+
+```bash
+aws sso login --profile my-sso-profile
+```
+
+Use the profile for OpenTofu commands:
+
+```bash
+export AWS_PROFILE=my-sso-profile
 aws sts get-caller-identity
 ```
+
+### Access Keys
+
+Configure a local AWS CLI profile:
+
+```bash
+aws configure --profile test-account
+export AWS_PROFILE=test-account
+aws sts get-caller-identity
+```
+
+Or use environment variables:
+
+```bash
+export AWS_ACCESS_KEY_ID=replace-me
+export AWS_SECRET_ACCESS_KEY=replace-me
+export AWS_REGION=us-east-1
+aws sts get-caller-identity
+```
+
+The `aws sts get-caller-identity` command should show the account you expect before you run `tofu plan`
+
+## First Plan
 
 Generate config:
 
@@ -74,7 +146,11 @@ Generate config:
 ./scripts/bootstrap.sh
 ```
 
-For the first test, keep the default low-cost choices:
+The script creates an environment-specific `terraform.tfvars` file
+
+If the selected environment directory does not exist yet, the script copies the root HCL files from `environments/dev/` and writes a new `terraform.tfvars`
+
+For the first test, keep these low-cost choices:
 
 - NAT Gateway disabled
 - EC2 admin host disabled
@@ -99,6 +175,42 @@ Expected result:
 - no infrastructure is created yet
 
 Do not run `tofu apply` during the first test
+
+Input rules: [docs/input-parameters.md](docs/input-parameters.md)
+
+Generated output example: [docs/generated-tfvars-example.md](docs/generated-tfvars-example.md)
+
+## Terraform Compatibility
+
+The same HCL can also be checked with Terraform:
+
+```bash
+cd environments/dev
+terraform init
+terraform plan
+```
+
+Do not maintain separate OpenTofu and Terraform folders. Compatibility should be proven by CI and documented command paths, not duplicated code
+
+## Apply
+
+Only apply after reviewing the plan:
+
+```bash
+cd environments/dev
+tofu apply
+```
+
+## Cleanup
+
+Destroy resources from the same environment directory:
+
+```bash
+cd environments/dev
+tofu destroy
+```
+
+Check the AWS console after cleanup if an apply or destroy was interrupted
 
 If `tofu plan` fails before showing a plan, check:
 
