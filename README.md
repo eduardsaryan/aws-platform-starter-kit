@@ -63,15 +63,12 @@ Required AWS access:
 
 ## Install Local Tools
 
-Install OpenTofu on macOS with Homebrew:
+### macOS
+
+Install tools with Homebrew:
 
 ```bash
 brew install opentofu
-```
-
-Install the AWS CLI on macOS with Homebrew:
-
-```bash
 brew install awscli
 ```
 
@@ -80,6 +77,62 @@ Optional Terraform compatibility path:
 ```bash
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
+```
+
+Check tools:
+
+```bash
+tofu version
+aws --version
+terraform version
+```
+
+If you are not using Terraform, skip the `terraform version` check
+
+### Debian or Ubuntu
+
+Install base packages:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y curl gpg ca-certificates unzip
+```
+
+Install OpenTofu from the official package installer:
+
+```bash
+curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
+chmod +x install-opentofu.sh
+./install-opentofu.sh --install-method deb
+rm -f install-opentofu.sh
+```
+
+Install the AWS CLI:
+
+```bash
+arch="$(uname -m)"
+case "${arch}" in
+  x86_64) aws_arch="x86_64" ;;
+  aarch64|arm64) aws_arch="aarch64" ;;
+  *) echo "unsupported AWS CLI architecture: ${arch}" >&2; exit 1 ;;
+esac
+curl "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+rm -rf aws awscliv2.zip
+```
+
+Optional Terraform compatibility path:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y gnupg software-properties-common wget
+. /etc/os-release
+codename="${UBUNTU_CODENAME:-${VERSION_CODENAME}}"
+wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${codename} main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt-get update
+sudo apt-get install -y terraform
 ```
 
 Check tools:
